@@ -36,4 +36,4 @@ while True:
 print("Total Attempts: %s / Took %0.2f seconds" %  (total_attempts, time() - start))
 print("Nonce: %d" % nonce)
 print(MD5.new(m1 % nonce).hexdigest())
-print(MD5.new(m1 % nonce).hexdigest())
+print(MD5.new(m2 % nonce).hexdigest())
