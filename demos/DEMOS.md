@@ -2,7 +2,6 @@
 
 ## Birthday Demo
 
-# Birthday Demo
 Esta es una demostración de cómo se puede conseguir una colisión entre dos cadenas diferentes de manera que generen hash MD5 que coincidan hasta un número determinado de posiciones. 
 
 En un equipo en el que tengamos instalado Python y Pip, necesitamos instalar las librerías PyCrypto
@@ -23,7 +22,7 @@ To how many places? 6
 Total Attempts: 12751416 / Took 81.24 seconds
 Nonce: 12751417
 23280161e8a3e3bbb89aeac858e1c8a7
-23280161e8a3e3bbb89aeac858e1c8a7
+232801a68d8774f6d464b32d5a0a39ae
 ```
 
 Ahora lo comprobamos. Para ello necesitamos tener instalado en el ordenador el comando md5.
