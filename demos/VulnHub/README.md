@@ -16,7 +16,7 @@ while read url; do wget -m -p -k -E -np "http://192.168.161.140$url";done < urls
 ```
 - En varios directorios hay una imagen de un gato. En uno de ellos el fichero es algo mayor que en los demás y se me ocurre que puede haber algo escondido usando alguna forma de esteganografía. Vuelco el contenido de la imagen usando **xxd**.  
 <img width="676" height="131" alt="image" src="https://github.com/user-attachments/assets/26a97ec7-27cc-4493-968c-2148abcdb2d2" />
-
+He visto que también se pueden buscar cadenas de texto dentro de ficheros usando la utilidad **strings**.
 - Pruebo a cargar la URL del servidor Web que me sugiere en el fichero **/y0ur_self** y veo que hay un fichero llamado answers.txt que contiene casi 100000 líneas. Cada una de estas líneas contiene un texto cdificado con Base64.
 - Paso esa lista a otro fichero y con un bucle en bash decodifico cada una de las cadenas y las guardo en un fichero.
 
