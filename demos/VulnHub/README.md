@@ -21,7 +21,7 @@ while read url; do wget -m -p -k -E -np "http://192.168.161.140$url";done < urls
 - Paso esa lista a otro fichero y con un bucle en bash decodifico cada una de las cadenas y las guardo en un fichero.
 
 ```bash
-while read string; do base64 $string;done < answer.txt > output.txt
+base64 -d answer.txt > decoded.txt
 ```  
 
 <img width="1225" height="235" alt="image" src="https://github.com/user-attachments/assets/7d354bb9-112a-473a-a649-c19578d7f522" />
