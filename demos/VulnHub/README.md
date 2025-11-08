@@ -79,7 +79,78 @@ echo '*<contenido de nuestro fichero con la clave pública>*' > /home/noob/.ssh/
 
 - Ahora ya puedo abrir una sesión directamente desde la máquina atacada.
 
-<img width="690" height="181" alt="image" src="https://github.com/user-attachments/assets/46b664b6-ff27-4ee5-aa1b-38297ef1a624" />
+<img width="690" height="181" alt="image" src="https://github.com/user-attachments/assets/46b664b6-ff27-4ee5-aa1b-38297ef1a624" />  
+
+## Exploración 
+- Miro a ver qué encuentro a partir del directorio raíz.
+ 
+<img width="847" height="448" alt="image" src="https://github.com/user-attachments/assets/7a517b78-ee84-4d17-9281-f53e3a88dc5c" />
+
+- Seguramente donde pone que no hay nada ... es donde está. Veo que hay una carpeta con 'tres puertas'. Y que cada una de ellas tiene el mismo fichero aunque en una de ellas el tamaño es claramente diferente. Así que esa será la puerta que elegiré.
+<img width="550" height="308" alt="image" src="https://github.com/user-attachments/assets/47039a7e-28f5-4823-88dc-dce535f19cf2" />
+
+**Nota**: Las puertas cambian periódicamente. Incluso con la sesión abierta. Y si ejecutas uno de los *r00t* que no es el correcto, se bloquea el comando **ls** durante dos minutos. 
+<img width="615" height="73" alt="image" src="https://github.com/user-attachments/assets/5483e5d6-3775-4fb1-a2ae-64fb024841da" />  
+
+También puede ser que te eche directamente de la sesión:  
+<img width="621" height="167" alt="image" src="https://github.com/user-attachments/assets/c473ab5d-b113-4e8c-b1fd-a3b91de950ff" />  
+
+Puedo 'detectar' que se ha producido un cambio de puertas si al hacer un *ls* me sale un error diciendo que no existe el directorio. En ese caso subo al nivel superior del directorio y vuelvo a entrar.  
+<img width="607" height="57" alt="image" src="https://github.com/user-attachments/assets/9f8e6560-e2e1-4ebe-8eec-778881f3d582" />
+
+Si selecciono la puerta correcta, veo que me dice que es necesario proporcionar un texto de entrada que muestra por pantalla. Parece candidato a un ataque de Buffer Overflow ya que también puedo ver que estos *r00t* tienen como owner a *root* y además tienen el SUID activado.
+
+<img width="589" height="133" alt="image" src="https://github.com/user-attachments/assets/d5fb4dcb-538b-40ac-86c7-20c68b1d1e24" />  
+
+### Buffer Overflow
+- Lanzo un bucle de manera que vaya probando con diferentes longitudes.
+```bash
+for i in {1..1000..50}; do printf "\nIntentando: %d\n" "$i"; ./door2/r00t "$(python -c "print('A'*$i)")"; done;
+```
+- Y veo que falla cuando llego a las 300.
+<img width="887" height="386" alt="image" src="https://github.com/user-attachments/assets/4f00cae9-df84-4a14-8df1-465bb80310d6" />
+
+- Podría simplemente lanzar *r00t* desde el depuerador con 300 A's. Pero entonces no sé donde ha quedao los punteros.
+<img width="786" height="135" alt="image" src="https://github.com/user-attachments/assets/0c863fb1-092b-4a29-909d-9c6851ca1a6f" /> 
+- Así que uso un script que viene con Metasploit que me permite generar algo más fácil de buscar.
+```bash
+/usr/share/metasploit-framework/tools/exploit/pattern_create.rb -l 300
+```
+<img width="886" height="92" alt="image" src="https://github.com/user-attachments/assets/d559f53f-c9be-4ef4-b041-afa3b6329e06" />
+
+- Y de vuelta en la máquina atacada lo paso como parámetro.
+<img width="873" height="214" alt="image" src="https://github.com/user-attachments/assets/703c73de-7592-4fce-b52c-2e11e86009bb" />
+
+- Ahora en la máquina Kali puedo utilizar otro script de Metasploit para encontrar en que posición se encuentra el valor que ha salido **6a413969**. Este valor no es dirección sino una secuencia de caracteres de nuestra entrada que ha sobreescrito un registro (overflow).
+
+<img width="658" height="101" alt="image" src="https://github.com/user-attachments/assets/a9d94a85-8656-4729-a31c-a36899e16972" />
+
+- Veo que está en el offset 268 de nuestra cadena de 300 caracteres. Así que ahora sí, paso 268 A's y 4 B's y veo que estas aparecen en el punto donde se ha producido el error.
+<img width="856" height="136" alt="image" src="https://github.com/user-attachments/assets/899f7f03-e284-4aef-a0e3-36c06ea137d4" />
+
+- Si muestro las variables de entorno, veo que hay bastantes. Esto puede afectarme a los punteros. 
+<img width="646" height="337" alt="image" src="https://github.com/user-attachments/assets/5c412622-f829-4b9d-b0d1-ddbcae5602f3" />
+
+- Así que repito la operación y me aseguro de que no hay ninguna variable.
+<img width="749" height="113" alt="image" src="https://github.com/user-attachments/assets/f629b2e7-fe50-4692-841a-c25587b8c066" />
+
+- Compruebo los registros. Nos interesa *esp* (Extended Stack Pointer).
+<img width="853" height="376" alt="image" src="https://github.com/user-attachments/assets/e5505a8a-7c6b-4cd9-bc82-48eaab184e25" />
+
+- Utilizo otra herramienta de Metasploit para que me genere el *payload* que añadiremos a esos 268+4 caracteres. Le pido que evite los caracteres \x00, \x0a y \x0d que podrían hacer que fallara el ataque.
+```bash
+msfvenom -p linux/x86/exec -f py CMD="/bin/sh" -b '\x00\x0a\x0d'
+```
+<img width="727" height="282" alt="image" src="https://github.com/user-attachments/assets/9a9760d7-0836-4b22-97d2-e50f93ca39ae" />
+
+- Paso el Python que me ha generado al intérprete para tener toda la cadena en una línea. Además le pasaremos una secuencia de 16 \x90 (código NOP) y la dirección de ejecucíón (donde antes estaban las B's) en formato *least significant first*.
+
+<img width="874" height="264" alt="image" src="https://github.com/user-attachments/assets/fbc14a6e-b324-4475-956a-e34043790da0" />  
+
+
+
+- 
+
 
 
 
