@@ -55,12 +55,12 @@ netstat -lntu
   ```bash
   find / -type f -perm 777 2> /dev/null
   ```
-  <img width="872" height="95" alt="image" src="https://github.com/user-attachments/assets/f4d1b1c3-7def-47d4-9648-03de54efeef7" />
+<img width="872" height="95" alt="image" src="https://github.com/user-attachments/assets/f4d1b1c3-7def-47d4-9648-03de54efeef7" />
 
-  - Me bajo los dos ficheros a Kali. Uno parece una lista de más de 3M de claves y la otra es un fichero *ncap*.
+- Me bajo los dos ficheros a Kali. Uno parece una lista de más de 3M de claves y la otra es un fichero *ncap*.
  
-  - Abro el fichero *ncap* y veo que contiene trafico 802.1. No encuentro nada.
-  <img width="1274" height="408" alt="image" src="https://github.com/user-attachments/assets/885ca866-3846-4b32-b3bc-cddad154f9be" />
+- Abro el fichero *ncap* y veo que contiene trafico 802.11. No encuentro nada.
+<img width="1274" height="408" alt="image" src="https://github.com/user-attachments/assets/885ca866-3846-4b32-b3bc-cddad154f9be" />
   
 - Por sugerencia de una página (que también sugería LinEnum y no ha servido de mucho mas que para conocer ese recurso) pruebo a crackear ese tráfico con la lista de claves.
 ```bash
@@ -68,8 +68,40 @@ aircrack-ng -w gold_star.txt wytshadow.cap
 ```
 <img width="576" height="330" alt="image" src="https://github.com/user-attachments/assets/af39faf8-dfa7-45ce-b47c-49cc43bca729" />
 
+- Después de un rato encuentra la clave. Ya tengo la contraseña del usuario **wytshadow**.
+<img width="548" height="322" alt="image" src="https://github.com/user-attachments/assets/78c65969-aa6c-413f-a5a2-3eca64219a1a" />
 
-<img width="565" height="334" alt="image" src="https://github.com/user-attachments/assets/6cfbdbc9-140e-466e-a8fd-3fabf1996b0c" />
+- Hago un *su* con el usuario **wytshadow** e inspecciono su directorio. Lo único que hay es una aplicación que tiene el SUID activado y muestra continuamente un mensaje. No hay por donde meterle mano para conseguir un overflow.
+<img width="574" height="298" alt="image" src="https://github.com/user-attachments/assets/694d52da-2f5b-4267-a12a-0bb2bba77918" />
+
+- Si verifico con *sudo -l* qué puede hacer este ususario (cosa que tomo nota que debo hacer con cada usuario) me dice que este usuario puede arrancar el servdor nginx.
+<img width="781" height="156" alt="image" src="https://github.com/user-attachments/assets/e146a495-acd2-4ffa-b379-552b595efb53" />
+
+- Pongo en marcha el servidor *nginx*. Veo que ahora también responde por el puerto 8080.
+<img width="793" height="230" alt="image" src="https://github.com/user-attachments/assets/c9b850aa-bd51-4224-9af0-77799d3640dd" />
+
+- A partir de la configuración de *nginx* veo que, si no paso como agente el valor **Lynx***, nos va a devolver un 403.
+<img width="700" height="482" alt="image" src="https://github.com/user-attachments/assets/b2b34978-8ba3-4796-8adb-9061b7a60f73" />
+
+- Lo verifico cargando la URL con un *curl*. A continuación pruebo a pasar el agente requerido y sí me devuelve contenido: la contraseña del usuario **genphlux**.
+<img width="438" height="275" alt="image" src="https://github.com/user-attachments/assets/b9528842-6988-4960-a25c-fa30e1e28d0b" />
+
+- Hago un *su* con el usuario **genphlux** y ahora lo primero que verifico es qué puede hacer como *sudo*. Y veo que puede poner en marcha Apache.
+<img width="792" height="127" alt="image" src="https://github.com/user-attachments/assets/03edb810-e4b8-4dec-8de1-896089ca843d" />
+
+- Antes de poner en marcha el servidor Apache, compruebo qué hay en el directorio de este usuario. Veo que hay dos ficheros. El fichero **maleus** contiene una clave privada.
+<img width="532" height="338" alt="image" src="https://github.com/user-attachments/assets/a2c1ffad-beba-4e29-9617-572950ea3b2d" />
+
+- Y el fichero xlogin continene una página HTML. Posiblemente sean para el servidor Apache. 
+<img width="870" height="243" alt="image" src="https://github.com/user-attachments/assets/e592e8a5-2d8b-4e01-ba94-7f6e60feed2d" />
+
+- Pongo en marcha Apache. Verifico con *nmap* que ahora está escuchando por el puerto 80.
+<img width="788" height="254" alt="image" src="https://github.com/user-attachments/assets/a96f67f8-5115-4421-ba27-59d9573d0063" />
+
+- Si intento cargar la *homepage* me da un error de privilegios. Voy a ver si tiene algún detalle parecido al que había con el *nginx*.
+<img width="638" height="218" alt="image" src="https://github.com/user-attachments/assets/1aaaaf7b-a4cd-4d29-9e2d-ec5275e000be" />
+
+
 
 
 
