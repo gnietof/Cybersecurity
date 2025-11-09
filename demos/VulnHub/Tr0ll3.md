@@ -49,5 +49,26 @@ netstat -lntu
 - Hago un *su* con ese usuario y contraseña pero no veo nada especial.
 <img width="522" height="162" alt="image" src="https://github.com/user-attachments/assets/e1b64632-26e3-4562-bdb9-a667c6f3b843" />
 
+- Siguiendo lo que sugerían en algún sitio me he bajado el LinEnum.sh (de **https://github.com/rebootuser/LinEnum/** no de LinEnum.sh que es un troleo), lo he subido a la máquina atacada con un *scp* y me ha dado mucha información pero ninguna que me haya parecido relevante.
+
+- Si que ha sido buena idea lo de buscar todos los ficheros que tengan permisos de lectura/escritura para todos los usuarios.
+  ```bash
+  find / -type f -perm 777 2> /dev/null
+  ```
+  <img width="872" height="95" alt="image" src="https://github.com/user-attachments/assets/f4d1b1c3-7def-47d4-9648-03de54efeef7" />
+
+  - Me bajo los dos ficheros a Kali. Uno parece una lista de más de 3M de claves y la otra es un fichero *ncap*.
+ 
+  - Abro el fichero *ncap* y veo que contiene trafico 802.1. No encuentro nada.
+  <img width="1274" height="408" alt="image" src="https://github.com/user-attachments/assets/885ca866-3846-4b32-b3bc-cddad154f9be" />
+  
+- Por sugerencia de una página (que también sugería LinEnum y no ha servido de mucho mas que para conocer ese recurso) pruebo a crackear ese tráfico con la lista de claves.
+```bash
+aircrack-ng -w gold_star.txt wytshadow.cap
+```
+<img width="576" height="330" alt="image" src="https://github.com/user-attachments/assets/af39faf8-dfa7-45ce-b47c-49cc43bca729" />
+
+
+
 
 
