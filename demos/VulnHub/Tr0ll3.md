@@ -69,6 +69,7 @@ aircrack-ng -w gold_star.txt wytshadow.cap
 <img width="576" height="330" alt="image" src="https://github.com/user-attachments/assets/af39faf8-dfa7-45ce-b47c-49cc43bca729" />
 
 
+<img width="565" height="334" alt="image" src="https://github.com/user-attachments/assets/6cfbdbc9-140e-466e-a8fd-3fabf1996b0c" />
 
 
 
