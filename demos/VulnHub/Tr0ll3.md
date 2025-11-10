@@ -101,6 +101,10 @@ aircrack-ng -w gold_star.txt wytshadow.cap
 - Si intento cargar la *homepage* me da un error de privilegios. Voy a ver si tiene algún detalle parecido al que había con el *nginx*.
 <img width="638" height="218" alt="image" src="https://github.com/user-attachments/assets/1aaaaf7b-a4cd-4d29-9e2d-ec5275e000be" />
 
+- Edito el fichero de configuración de Apache2 (/etc/apache2/sites-available/000-default.conf) y veo que por defecto no me deja cargar las páginas si no es desde la propia máquina por la dirección de *loopback*.
+<img width="702" height="439" alt="image" src="https://github.com/user-attachments/assets/633db139-a6af-441b-b5ba-78762351d81f" />
+
+
 
 
 
