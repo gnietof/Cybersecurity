@@ -89,7 +89,7 @@ aircrack-ng -w gold_star.txt wytshadow.cap
 - Hago un *su* con el usuario **genphlux** y ahora lo primero que verifico es qué puede hacer como *sudo*. Y veo que puede poner en marcha Apache.
 <img width="792" height="127" alt="image" src="https://github.com/user-attachments/assets/03edb810-e4b8-4dec-8de1-896089ca843d" />
 
-- Antes de poner en marcha el servidor Apache, compruebo qué hay en el directorio de este usuario. Veo que hay dos ficheros. El fichero **maleus** contiene una clave privada.
+- Antes de poner en marcha el servidor Apache, compruebo qué hay en el directorio de este usuario. Veo que hay dos ficheros. El fichero **maleus** contiene una clave ¿privada?.
 <img width="532" height="338" alt="image" src="https://github.com/user-attachments/assets/a2c1ffad-beba-4e29-9617-572950ea3b2d" />
 
 - Y el fichero xlogin continene una página HTML. Posiblemente sean para el servidor Apache. 
@@ -103,6 +103,56 @@ aircrack-ng -w gold_star.txt wytshadow.cap
 
 - Edito el fichero de configuración de Apache2 (/etc/apache2/sites-available/000-default.conf) y veo que por defecto no me deja cargar las páginas si no es desde la propia máquina por la dirección de *loopback*.
 <img width="702" height="439" alt="image" src="https://github.com/user-attachments/assets/633db139-a6af-441b-b5ba-78762351d81f" />
+
+- Se me ocurre hacer un *wget* de la *homepage* y veo que me descarga el fichero index.html. Lo abro y me aparece una nueva contraseña ... que no me lleva a ninguna parte. Creo que es incorrecta.
+<img width="886" height="342" alt="image" src="https://github.com/user-attachments/assets/0bf1abb0-1292-44bf-9c75-e8f3705116ad" />
+
+- Desde la máquina atacante pruebo a hacer un ssh como usuario **maleus** y pasando la clave ¿privada? que me he encontrado en el home del usuario **genphlux**.
+```bash
+ssh maleus@127.0.0.1 -i maleus
+```
+- Me deja entrar (con lo que no creo que sea una clave privada) y puedo ver el contenido de su *home*.
+<img width="535" height="194" alt="image" src="https://github.com/user-attachments/assets/2ae0d410-af31-4e89-affc-33d619786893" />
+
+- Veo que tiene un fichero que se llama **dont_even_bother**. Al ejecutarlo nos pide una contraseña. Si vuelco el contenido del ejecutable veo que la contraseña está visible. Pero introducirla correctamente no nos da ninguna información adicional.
+<img width="887" height="417" alt="image" src="https://github.com/user-attachments/assets/5a240847-2488-421f-97b6-e3d383c64f8e" />
+
+- Sin embargo, al volcar el contenido del fichero .vimrc si que veo una cadena que tiene buena pinta.
+<img width="543" height="518" alt="image" src="https://github.com/user-attachments/assets/cb38ac82-1270-4748-a020-44bedf61280c" />
+
+- Pruebo a hacer un *su* y efectivamente esa es la contraseña del usuario maleus. Ya no necesito usar el certificado. Ahora ya puedo hacer un *sudo -l* para ver que permisos sudo tiene. Veo que puede ejecutar como root el **dont_even_bother**. El fichero no es SUID. Pero lo interesante es que: ¡el usuario puede modificar el fichero!
+<img width="809" height="149" alt="image" src="https://github.com/user-attachments/assets/ac27348f-0719-4c8d-b67c-818dc1257326" />
+
+- Escribo un pequeño fuente en C que simplemente abre un shell. Si lo ejecuto como root ... en ese shell seré root.
+```c
+#include <stdlib.h>
+
+int main() {
+system("/bin/sh");
+exit(0);
+}
+```
+- Inicialmente lo escribí y compilé fuera de la máquina atacada pensando que esta no tenía instalado el gcc. Y lo tuve que hacer en una VM Ubuntu 18 ya que si lo hacía en la máquina Kali me daba problemas de librerías. Y aunque conseguí transferirlo y ejecutarlo, luego vi que sí que tenía gcc. Así que solo documento la versión final.
+<img width="885" height="83" alt="image" src="https://github.com/user-attachments/assets/22fd2e9a-d8ac-47f6-a8d7-7d8873148b32" />
+
+- Edito, compilo y ejecuto el nuevo **dont_even_bother**. Sin necesidad de hacer nada especial me abre un terminal y al haberlo ejecutado con *sudo* ya tengo acceso como *root*.
+<img width="556" height="167" alt="image" src="https://github.com/user-attachments/assets/80f41f1f-4402-42ad-a8f0-cf5300ca0b5d" />
+
+- Ya sólo me queda sacar el token que prueba que lo he completado.
+<img width="431" height="167" alt="image" src="https://github.com/user-attachments/assets/c4151f0c-109e-41c7-98cc-cca3ee29ad9a" />
+
+### Apéndice
+
+Como la cosa se complica voy a añadirme aquí una tabla de usuarios y contraseñas
+
+| Usuario | Contraseña | Comentario |
+|---------|------------|------------|
+| start | here | Proporcionado al arrancar la máquina virtual. |
+| eagle | oxxwJo | Encontrado dentro de un fichero en el directorio *oculto* ... |
+| wytshadow | gaUoCe34t1 | Obtenido por aircrack-ng a partir del fichero ncap. |
+| genphlux | HF9nd0cR! | Proporcionado al cargar la *homepage* de nginx. | 
+| fido | x4tPl! | Encontrada al comprobar el contenido de la *homepage* de Apache. Pero creo que es otra pista falsa. |
+| maleus | B^slc8I$ | Es posible hacer un ssh desde la máquina atacante pasando la clave *privada* que tiene el usuario genphlux en su directorio. La contraseña se puede ver volcando el contenido del .vimrc | 
 
 
 
