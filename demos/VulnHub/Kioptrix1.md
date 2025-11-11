@@ -6,6 +6,7 @@
 
 - Utilizando Metasploit hago un enumerado de usuarios de ssh. He utilizado las opciones:
 <img width="646" height="454" alt="image" src="https://github.com/user-attachments/assets/07e148da-279b-4192-b0bd-d118e87c3167" />
+
 - Y estos son los resultados.
 <img width="644" height="416" alt="image" src="https://github.com/user-attachments/assets/76261d96-8538-4608-9829-b1cfc688687b" />
 
